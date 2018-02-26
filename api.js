@@ -13,11 +13,12 @@ const {
 
 const router = express.Router();
 
+// Ath hvort innsend json gögn séu í lagi
 const jsonValidation = [
   sanitize(['title', 'text', 'datetime']).trim(),
-  body('title').isLength({ min: 1, max: 255 }).withMessage({
-    field: 'title', message: 'Title must be a string of length 1 to 255 characters',
-  }),
+  body('title', { field: 'title', message: 'Title must be a string of length 1 to 255 characters' })
+    .isLength({ min: 1, max: 255 })
+    .custom(value => typeof value === 'string'),
   body('text').custom(value => typeof value === 'string').withMessage({
     field: 'text', message: 'Text must be a string',
   }),
@@ -26,15 +27,18 @@ const jsonValidation = [
   }),
 ];
 
+// Fall sem kallar á readAll til að sækja gögn
 async function data(req, res) {
   const rows = await readAll();
   return res.json(rows);
 }
 
+// Fall sem kallar á readOne til að sækja gögn með ákveðið id
 async function idData(req, res) {
   const { id } = req.params;
   const row = await readOne(id);
 
+  // row er object (truthy) ef lina til með þessu id, annars undefined (falsy)
   if (row) {
     return res.json(row);
   }
@@ -42,6 +46,7 @@ async function idData(req, res) {
   return res.status(404).json({ error: 'Not found' });
 }
 
+// Fall sem vinnur úr gögnum og kallar á create til að búa til röð í töflu
 async function createNote(req, res) {
   // fá öll gögn úr innsenda json
   const {
@@ -52,24 +57,28 @@ async function createNote(req, res) {
     } = {},
   } = req;
 
-    // öll gögn hreinsuð
+  // öll gögn hreinsuð
   const readyData = {
     title: xss(title),
     text: xss(text),
     datetime: xss(datetime),
   };
 
+  // Sækja villur úr validationResult
   const errors = validationResult(req);
 
+  // Ef það voru villur (gögn ekki rétt slegin inn), þá birta villur
   if (!errors.isEmpty()) {
     const errorMessages = errors.array().map(i => i.msg);
     return res.status(400).json(errorMessages);
   }
 
+  // Annars kalla á create til að búa til note/röð og birta síðan þau gögn
   const inserted = await create(readyData);
   return res.status(201).json(inserted);
 }
 
+// Fall til sem kallar á update til að 'put'/update-a röð í töflu
 async function updateNote(req, res) {
   const { id } = req.params;
   // fá öll gögn úr innsenda json
@@ -95,8 +104,11 @@ async function updateNote(req, res) {
     return res.status(400).json(errorMessages);
   }
 
+  // kalla á update til að breyta röð með id, update skilar 'rows' sem er röðin sem
+  // hún uppfærði, ef engin röð með þetta id þá skilar hún tómum object
   const updated = await update(id, readyData);
 
+  // Ath hvort tómum object var skilað (þá var enginn röð með þetta id)
   if (Object.keys(updated).length === 0) {
     return res.status(404).json({ error: 'Not found' });
   }
@@ -104,6 +116,7 @@ async function updateNote(req, res) {
   return res.status(201).json(updated);
 }
 
+// Fall sem kallar á del til að eyða röð með id
 async function idDelete(req, res) {
   const { id } = req.params;
   const existed = await del(id);
