@@ -97,7 +97,7 @@ async function update(id, { title, text, datetime } = {}) {
   try {
     const result = await client.query(query, values);
     const { rows } = result;
-    return rows;
+    return rows[0];
   } catch (err) {
     console.error('Error updating data');
     throw err;

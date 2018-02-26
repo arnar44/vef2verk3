@@ -105,11 +105,11 @@ async function updateNote(req, res) {
   }
 
   // kalla á update til að breyta röð með id, update skilar 'rows' sem er röðin sem
-  // hún uppfærði, ef engin röð með þetta id þá skilar hún tómum object
+  // hún uppfærði, ef engin röð með þetta id þá skilar hún undefined
   const updated = await update(id, readyData);
 
-  // Ath hvort tómum object var skilað (þá var enginn röð með þetta id)
-  if (Object.keys(updated).length === 0) {
+  // Ath hvort undefined var skilað (þá var enginn röð með þetta id)
+  if (!updated) {
     return res.status(404).json({ error: 'Not found' });
   }
 
