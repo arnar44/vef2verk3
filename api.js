@@ -96,6 +96,11 @@ async function updateNote(req, res) {
   }
 
   const updated = await update(id, readyData);
+
+  if (Object.keys(updated).length === 0) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
   return res.status(201).json(updated);
 }
 

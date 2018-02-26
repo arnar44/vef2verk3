@@ -42,7 +42,7 @@ async function readAll() {
   await client.connect();
 
   try {
-    const result = await client.query('SELECT * FROM notes');
+    const result = await client.query('SELECT * FROM notes ORDER BY id');
     const { rows } = result;
     return rows;
   } catch (err) {
